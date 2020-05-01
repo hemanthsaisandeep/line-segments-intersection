@@ -2,15 +2,11 @@
 #define POINT_2D
 
 using namespace std;
-#include <list>
 #include <limits>
 #include <iostream>
 #include <cmath>
 
-
-
 #define BS std::numeric_limits<double>::infinity()
-
 
 class Point2D{
 public: 
@@ -40,18 +36,21 @@ public:
 		return sqrt(pow(this->x - point.x,2) + pow(this->y - point.y,2));
 	};
 
+	// function to check if our point is invalid or null
+	bool invalid() {
+	  if (this->x != BS || this->y != BS) return false;
+	  return true;
+	};
 
-	// // function to check if our point is collinear in a list of points
+	// Operator overloading
+	bool operator==(const Point2D & p) {
+	  return (x == p.x && y == p.y);
+	};
+      
+	// function to check if our point is collinear in a list of points
 	// bool collinearCheck(list <Point2D> l);
 };
 
-
-
 //bool checkSamePoints(Point2D p1,Point2D p2);
 
-
-
 #endif
-
-
-

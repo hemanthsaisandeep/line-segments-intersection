@@ -1,9 +1,6 @@
 #ifndef EVENTQUEUE_H
 #define EVENTQUEUE_H
 
-#include "point.hpp"
-#include "lineSegment.hpp"
-#include "event.hpp"
 #include "sweepLine.hpp"
 #include <map>
 #include <list>
