@@ -51,3 +51,27 @@ int compare(Event that) {
     // Say their start points are the same, then compare their right end points
     return (this->segment.end.x - that.segment.end.x<0) ? -1 : 1;
   };
+
+  void checkIntersection(Event a, Event b) {
+    if (a.type == Event::INTERSECTION ||
+	b.type == Event::INTERSECTION)
+      return;
+
+    Point2D p = a.segment.intersects(b.segment);
+
+    if p.invalid() return;
+
+    if (a.segment.atEnding(p) && b.segment.atEnding(p) && ignoreSegmentEndings)
+      return;
+
+    set<Event> existing = intersections->erase(p);
+    if (existing == null) existing = new unordered_set<Event>;
+    existing.insert(a);
+    existing.insert(b);
+    intersections.insert(p,existing);
+
+    if (sweepLine.locRight(p) || (sweepLine.pointContained(p) &&
+				  currentEventPoint.y)) {
+      Event intersection = new Event(Event.Type.INTERSECTION, p, null, this);
+      queue->offer(p, intersection);
+    };

@@ -32,7 +32,7 @@ public:
 
 
 	// function to calculate the distance of our point wrt to an external point 
-	double distanceApprox(Point2D point){
+	double distanceApprox(Point2D point) const {
 		return sqrt(pow(this->x - point.x,2) + pow(this->y - point.y,2));
 	};
 

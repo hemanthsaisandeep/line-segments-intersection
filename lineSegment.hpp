@@ -215,9 +215,9 @@ public:
 	// A function to check if a given point is lying on the end points of
 	// `this'
 	bool atEnding(Point2D p) {
-	  return (pointEqual::checkSamePoints(this->start,p) ||
-		  pointEqual::checkSamePoints(this->end,p));
-	};
+	  return ((this->start == p) ||
+		  (this->end == p));
+	}
 };
 
 #endif
