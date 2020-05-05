@@ -63,6 +63,8 @@ public:
 // Definition of `Event' class ends //
 //////////////////////////////////////
 
+
+
 class EventHash{
 public:
   // function to return the hash of an event
@@ -75,7 +77,7 @@ public:
   }
 };
 
-class EventQueue;
+//class EventQueue;
 
 class SweepLine {
 private:

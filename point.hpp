@@ -46,6 +46,18 @@ public:
 	bool operator==(const Point2D & p) {
 	  return (x == p.x && y == p.y);
 	};
+
+	bool operator<(const Point2D p) const {
+		if(this->x != p.x){
+			return (this->x < p.x);
+		}
+		else{
+			if(this->y != p.y){
+				return (this->y < p.y);
+			}
+			else return false;
+		}
+	};
       
 	// function to check if our point is collinear in a list of points
 	// bool collinearCheck(list <Point2D> l);
