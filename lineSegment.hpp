@@ -183,8 +183,7 @@ public:
 					return (this->pointContained(result) && that.pointContained(result)) ? result: Point2D() ;
 				}
 				}
-			}
-			// }
+			};
 
 	// A function to check if a given point is to the right of `this'
 	bool locRight(Point2D p) {
@@ -217,7 +216,26 @@ public:
 	bool atEnding(Point2D p) {
 	  return ((this->start == p) ||
 		  (this->end == p));
-	}
+	};
+
+	// Operator overloading
+	bool operator<(const LineSegment& l) const {
+		// first check the x coordinate of start points of both line segments 
+		// then check the y coordinate of start points of both line segments
+		// if unresolved then compare slopes.
+		if(this->start.x != l.start.x){
+			return(this->start.x < l.start.x);
+		}
+		else{
+			if(this->start.y != l.start.y){
+				return(this->start.y > l.start.y);
+			}
+			else{
+				return(this->slope < l.slope);
+			}
+		}
+	};
+
 };
 
 #endif
