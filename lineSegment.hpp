@@ -55,7 +55,14 @@ public:
 			}
 };
 
-
+	LineSegment(Point2D p, double m, double yMin, double yMax) {
+	  this->slope = m;
+	  this->constant = p.y-m*p.x;
+	  this->start.y = yMin;
+	  this->end.y  = yMax;
+	  this->start.x = (yMin-this->constant)/m;
+	  this->end.x = (yMax-this->constant)/m;
+	};
 
 	/*
 		Function to calculate the slope and the constant AFTER the LineSegment constructor() is called.
@@ -101,7 +108,7 @@ public:
 		Note that if point p is either the start or the end point, it is considered
 		to be inside the line segment.
 	*/
-	bool pointContained(Point2D p){
+	bool pointContained(Point2D p) const{
 		if(isnan(this->slope)){
 			return (p.x==this->constant)?true:false;
 		}
@@ -125,7 +132,7 @@ public:
 		Assuming that the line segment is valid
 		Return bool
 	*/
-	bool lineSegmentContained(LineSegment that){
+	bool lineSegmentContained(LineSegment that) const{
 		// first check if the slopes are same or not
 		if(this->slope == that.slope){
 			// check if the start of 'that' lies in this and check if end of 'this' lies in that
@@ -142,7 +149,7 @@ public:
 		Additional functions written are to calculate xIntercept and yIntercept.
 	*/
 
-	bool equals (LineSegment that) {
+	bool equals (LineSegment that) const {
 	  if (lineSegmentContained(that)) {
 	    if (this->start.x == that.start.x && this->end.y == that.end.y)
 	      return true;
@@ -150,7 +157,7 @@ public:
 	  return false;
 	};
 
-	double xIntercept(LineSegment that){
+	double xIntercept(LineSegment that) const{
 		if(this->slope == BS){
 				return this->constant;
 			}
@@ -162,18 +169,18 @@ public:
 		}
 	};
 
-	double yIntercept(double x){
+	double yIntercept(double x) const{
 		return this->slope*x + this->constant;
 	};
 
 	// function to check if "lines" intersect
-	Point2D intersects(LineSegment that){
+	Point2D intersects(LineSegment that) const {
 		// if(that. != BS ){
 			if(this->slope == that.slope){
 				return Point2D();
 			}
 			else{
-				double x = this->xIntercept(that);
+			  double x = this->xIntercept(that);
 				if(this->slope == BS){
 					Point2D result =  Point2D(x,that.yIntercept(x));
 					return (this->pointContained(result) == true)?result:(Point2D());
@@ -219,6 +226,12 @@ public:
 	};
 
 	// Operator overloading
+	bool operator==(const LineSegment & l) const {
+	  if (this->equals(l))
+	    return true;
+	  return false;
+	}
+  
 	bool operator<(const LineSegment& l) const {
 		// first check the x coordinate of start points of both line segments 
 		// then check the y coordinate of start points of both line segments
