@@ -10,10 +10,11 @@ private:
 public:
   static map<Point2D, set<LineSegment>> intxnMap(set<LineSegment> segments) {
     // cout << segments.size() << endl;
-    if (segments.size() < 2) {
-      set<LineSegment> dumvar;
+    if (segments.size() < 2) {	// return a mapping from a null point to a null
+				// line segment
+      set<LineSegment> dumvar;	// just a dummy variable
       dumvar.insert(LineSegment());
-      map<Point2D, set<LineSegment>> retval;
+      map<Point2D, set<LineSegment>> retval; // value to be returned
       retval[Point2D()] =  dumvar;
       return retval;
     }
@@ -22,7 +23,7 @@ public:
     EventQueue queue = EventQueue(segments,sweepLine);
 
     while (!queue.isEmpty()) {
-      unordered_set<Event,EventHash> events = queue.firstEntry();
+      set<Event> events = queue.firstEntry();
       sweepLine.handle(events);
     }
 
