@@ -45,6 +45,8 @@ public:
       return false;
     return true;
   }
+
+  void showEvent();
 };
 
 class SweepLine {
@@ -55,6 +57,9 @@ private:
   LineSegment sweep;
   Point2D currentEventPoint;
   bool before;
+
+
+public:
   double yMin, yMax;
 
 protected:
@@ -70,12 +75,16 @@ public:
   // Returns the event that is immediately above the current event
   Event above(Event e) {
     resultEvent = events.upper_bound(e);
+    if (resultEvent == events.end())
+      throw 9999;
     return *resultEvent;
   }
 
   // Returns the event that is immediately below the current event
   Event below(Event e) {
     resultEvent = events.lower_bound(e);
+    if (resultEvent == events.end())
+      throw 1234;
     return *resultEvent;
   }
 
@@ -96,29 +105,28 @@ public:
   }
 
   // Returns an map of the segments
-  map<Point2D,set<LineSegment>> listIntersections() {
-    map<Point2D,set<LineSegment>> segments;
+  map<Point2D,vector<LineSegment>> listIntersections() {
+    map<Point2D,vector<LineSegment>> segments;
     map<Point2D,set<Event>>::iterator iterIntxn;
     for (iterIntxn = this->intersections.begin();
 	 iterIntxn != this->intersections.end(); iterIntxn++) {
       set<Event>::iterator iterEve;
-      set<LineSegment> intxnEventSet;
+      vector<LineSegment> intxnEventSet;
       for (iterEve = iterIntxn->second.begin();
 	   iterEve != iterIntxn->second.end(); iterEve++)
-	intxnEventSet.insert(iterEve->segment);
-      pair<Point2D,set<LineSegment>> dumvar(iterIntxn->first,intxnEventSet);
+	intxnEventSet.push_back(iterEve->segment);
+      pair<Point2D,vector<LineSegment>> dumvar(iterIntxn->first,intxnEventSet);
       segments.insert(dumvar);
     }
     return segments;
   }
 
   void setLine(LineSegment line) {
-    cout << __LINE__ << endl;
     this->sweep = line;
     return;
   }
 
-  void setQueue(void * q);
+  void setQueue(void * ptrQ);
 
 private:
   // Checks the intersection between two events
@@ -126,19 +134,39 @@ private:
 
   // Handle an individual event based on its type
   void handle(Event e) {
+    Event eUb;
+    Event eLb;
+    int flag;
+    try {
+      eUb = above(e);
+      eLb = below(e);
+    } catch(int x) {
+      if (x == 1234)
+	flag = -1;
+      else if (x == 9999)
+	flag = 1;
+      cout << "Either immediately above or below event does not exist" << endl;
+      return;
+    }
     switch(e.type) {
     case Event::START:
+      cout << __LINE__ << " Yo! A start event" << endl;
       before = false;
       events.insert(e);
-      checkIntersection(e,above(e));
-      checkIntersection(e,below(e));
+      if (flag != 1)
+	checkIntersection(e,eUb);
+      if (flag != -1)
+	checkIntersection(e,eLb);
       break;
     case Event::END:
+      cout << __LINE__ << " Yo! An end event" << endl;
       before = true;
       events.erase(e);
-      checkIntersection(above(e),below(e));
+      if (flag != 1 && flag != -1)
+	checkIntersection(eUb,eLb);
       break;
     case Event::INTERSECTION:
+      cout << __LINE__ << "WOAH! An intersection" << endl;
       before = true;
       set<Event> eveSet = intersections.at(e.point);
       set<Event>::iterator iterEve;
@@ -151,19 +179,34 @@ private:
       // Insert all events that we are able to remove
       while (!(toInsert.empty())) {
 	Event eve = toInsert.top();
+	Event eveLb, eveUb;
+	try {
+	  eveUb = above(eve);
+	  eveLb = below(eve);
+	} catch(int x) {
+	  if (x == 1234)
+	    flag = -1;
+	  else if (x == 9999)
+	    flag = 1;
+	  return;
+	}
 	toInsert.pop();
 	events.insert(eve);
-	checkIntersection(eve,above(eve));
-	checkIntersection(eve,below(eve));
+	if (flag != 1)
+	  checkIntersection(eve,eveUb);
+	if (flag != -1)
+	  checkIntersection(eve,eveLb);
       }
       break;
     }
     return;
   }
 
+  // Updates the sweep line and moves it to the current event point
   void sweepTo(Event e) {
     currentEventPoint = e.point;
     sweep = LineSegment(currentEventPoint,sweep.slope,yMin,yMax);
+    this->showSweepLine();
     return;
   }
 
@@ -189,6 +232,15 @@ public:
     }
     return;
   }
+
+  // Display sweep line formatted as a string
+  void showSweepLine() {
+    cout << "The current sweep line has a slope of " << this->sweep.slope
+	 << ", passes through ";
+    this->sweep.start.showPoints();
+    cout << ", and the current event point is ";
+    this->currentEventPoint.showPoints();
+  }
 };
 
 class EventQueue {
@@ -199,13 +251,15 @@ public:
   // constructor
   EventQueue() {  }
 
-  EventQueue(set<LineSegment> segments, SweepLine line) {
+  EventQueue(vector<LineSegment> segments, SweepLine * line) {
     if (segments.empty())
-      cout << "'segments' cannot be empty" << endl;
-    init(segments,&line);
+      cout << "'Segments' cannot be empty" << endl;
+    init(segments,line);
   }
 
-  void offer(Point2D p, Event e) {
+  // Offers a new event point to the queue and inserts END events at the start
+  // while events of other type are appended at the end of the queue
+  void modify(Point2D p, Event e) {
     set<Event> existing;
     if (events.find(p) != events.end()) {
       set<Event> existing = events.at(p);
@@ -224,6 +278,7 @@ public:
     return;
   }
 
+  // Returns true if the event queue is empty
   bool isEmpty () {
     return events.empty();
   }
@@ -239,28 +294,32 @@ public:
   }
 
 private:
-  void init(set<LineSegment> segments, void * ptrSwLi){
-
+  // Initializes sweep line and event queue for a given input of line segments
+  void init(vector<LineSegment> segments, void * ptrSwLi){
     double minY = BS;
     double maxY = -BS;
     double minX = BS;
     double minDeltaX = BS;
     set<double> xs;
-    set<LineSegment>::iterator itr;
+    vector<LineSegment>::iterator itr;
     for(itr = segments.begin(); itr != segments.end(); itr++){
       xs.insert(itr->start.x);
       xs.insert(itr->end.x);
       if(itr->start.y <= itr->end.y){
-	minY = itr->start.y;
-	maxY = itr->end.y;
+	if (itr->start.y < minY)
+	  minY = itr->start.y;
+	if (itr->end.y > maxY)
+	  maxY = itr->end.y;
       }
       else{
-	minY = itr->end.y;
-	maxY = itr->start.y;
+	if (itr->end.y < minY)
+	  minY = itr->end.y;
+	if (itr->start.y > maxY)
+	  maxY = itr->start.y;
       }
 
-      offer(itr->start, Event(Event::START, itr->start, *itr, ptrSwLi));
-      offer(itr->end, Event(Event::END, itr->end, *itr, ptrSwLi));
+      modify(itr->start, Event(Event::START, itr->start, *itr, ptrSwLi));
+      modify(itr->end, Event(Event::END, itr->end, *itr, ptrSwLi));
     }
 
     vector<double> xsVector(xs.size());
@@ -277,9 +336,13 @@ private:
     double slope = -deltaY*1000/minDeltaX;
 
     SweepLine * ptrSweepLine = static_cast<SweepLine*>(ptrSwLi);
+    ptrSweepLine->yMin = minY;
+    ptrSweepLine->yMax = maxY;
     ptrSweepLine->
-      setLine(LineSegment(Point2D(0,0), slope,  minY-1, maxY+1));
+      setLine(LineSegment(Point2D(minX-pow(slope,2),minY-pow(slope,2)),
+			  slope,  minY-1, maxY+1));
     ptrSweepLine->setQueue(this);
+    ptrSweepLine->showSweepLine();
     return;
   }
 };
@@ -313,7 +376,7 @@ Event::Event(Type t, Point2D p, LineSegment seg, void * ptrSl) {
    then the end point abscissa of `this' should come later.
    3. Return -1, otherwise
 */
-Event::compare (Event that) const {
+int Event::compare (Event that) const {
   // Same events
   if (this->equals(that))
     return 0;
@@ -374,27 +437,23 @@ void SweepLine::setQueue(void * ptrQ) {
   ptrEventQueue = ptrQ;
   if (ptrEventQueue == NULL)
     cout << "setQueue() ain't working, dude" << endl;
-  // else {
-  //   EventQueue * q = static_cast<EventQueue*>(ptrEventQueue);
-  //   cout << "Yeah, setQueue() worked and " <<
-  //     q->events.begin().first.showPoints() << endl;
-  // }
   return;
 }
 
 void SweepLine::checkIntersection(Event a, Event b) {
   if (ptrEventQueue != NULL) {
-    cout << __LINE__ << endl;
     EventQueue *ptr = static_cast<EventQueue*>(ptrEventQueue);
-    EventQueue eveQ = *ptr;
 
     if (a.type != Event::INTERSECTION &&
 	b.type != Event::INTERSECTION) {
-
-      Point2D p = a.segment.intersects(b.segment);
-
+      Point2D p;
+      try {
+	p = a.segment.intersects(b.segment);
+	p.showPoints();
+      } catch(int) {
+	return;
+      }
       if (!(p.invalid())) {
-
 	if (!(a.segment.atEnding(p)) || !(b.segment.atEnding(p)) ||
 	    !ignoreSegmentEndings) {
 	  set<Event> existing;
@@ -413,14 +472,35 @@ void SweepLine::checkIntersection(Event a, Event b) {
 	  if (sweep.locRight(p) || (sweep.pointContained(p) &&
 				    (p.y > currentEventPoint.y))) {
 	    Event intersection = Event(Event::INTERSECTION,p,LineSegment(),this);
-	    eveQ.offer(p, intersection);
+
+	    ptr->modify(p, intersection);
+	    intersection.showEvent();
 	  }
 	}
       }
     }
   }
-  else
-    cout << "SweepLine::setQueue() went bonkers" << endl;
+  // else
+  //   cout << "SweepLine::setQueue() went bonkers" << endl;
+}
+
+void Event::showEvent() {
+  cout << "The current event point is " << endl;
+  point.showPoints();
+  switch(type) {
+  case Event::START:
+    cout << "\033[F, a start point, " << endl;
+    break;
+  case Event::END:
+    cout << "\033[F, an end point, " << endl;
+    break;
+  case Event::INTERSECTION:
+    cout << "\033[F, an intersection point, " << endl;
+    break;
+  }
+  cout << "and the associated sweepline is ";
+  SweepLine * ptrSwLi = static_cast<SweepLine*>(ptrSweepLine);
+  ptrSwLi->showSweepLine();
 }
 #endif
 

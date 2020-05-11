@@ -1,7 +1,7 @@
 #ifndef LINESEGMENT_2D
 #define LINESEGMENT_2D
 
-#include "point.cpp"
+#include "point.hpp"
 
 using namespace std;
 #include <iostream>
@@ -68,10 +68,10 @@ public:
 		Function to calculate the slope and the constant AFTER the LineSegment constructor() is called.
 	*/
 	void calculateSlopeConstant(){
-		if(this->start.x != BS && this->start.y != BS && this->end.x != BS && this->end.x != BS){
-			if(this->end.x != this->start.x ){
-				this->slope = (this->end.y-this->start.y)/(this->end.x - this->start.x);
-				this->constant = (this->start.y*this->end.x - this->start.x*this->end.y)/(this->end.x - this->start.x);
+	  if(start.x != BS && start.y != BS && end.x != BS && end.x != BS){
+			if(end.x != start.x ){
+				slope = (end.y-start.y)/(end.x - start.x);
+				constant = (start.y*end.x - start.x*end.y)/(end.x - start.x);
 			}
 			else{
 				 /*
@@ -80,8 +80,8 @@ public:
 					Here we just store the x coordinate
 
 				 */
-				this->constant = this->end.x;
-				this->slope = BS;
+				constant = end.x;
+				slope = BS;
 			}
 		}
 
@@ -91,7 +91,7 @@ public:
 	/*
 		Function to print the line segment
 	*/
-	void showLineSegment(){
+	void showLineSegment() const{
 		cout << " The start point of line segment : ";
 		this->start.showPoints();
 		cout << " The end point of line segment : ";
@@ -119,9 +119,7 @@ public:
 			int sign_y1 = (this->start.y - p.y)/abs(this->start.y - p.y) ;
 			int sign_y2 = (p.y - this->end.y)/abs(p.y - this->end.y);
 
-			// cout << sign_x1 << sign_x2 << sign_y1 << sign_y2 << endl;
-
-			return ( (this->start == p) ||
+			return ((this->start == p) ||
 				 (this->end == p) ||
 				 (((this->slope*p.x+this->constant - p.y)==0 && sign_x1 == sign_x2 && sign_y1 == sign_y2)?true:false));
 		}
@@ -174,10 +172,15 @@ public:
 	};
 
 	// function to check if "lines" intersect
-	Point2D intersects(LineSegment that) const {
-		// if(that. != BS ){
-			if(this->slope == that.slope){
-				return Point2D();
+	Point2D intersects(LineSegment that) const {	  
+	  // cout << __LINE__ << endl;
+	  this->showLineSegment();
+	  that.showLineSegment();
+	  cout << this->slope << endl;
+	  cout << that.slope << endl;
+	  return Point2D();
+			if(*this == that || this->slope == that.slope){
+			  throw 1000000;
 			}
 			else{
 			  double x = this->xIntercept(that);

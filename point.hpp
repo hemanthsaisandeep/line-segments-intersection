@@ -58,11 +58,5 @@ public:
 			else return false;
 		}
 	}
-      
-	// function to check if our point is collinear in a list of points
-	// bool collinearCheck(list <Point2D> l);
 };
-
-//bool checkSamePoints(Point2D p1,Point2D p2);
-
 #endif

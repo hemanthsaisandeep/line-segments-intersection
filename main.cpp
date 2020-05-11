@@ -29,10 +29,6 @@ int main(){
 	// 	itr.second.showPoints();
 	// }
 	
-
-
-
-
 	// // Point2D point3 = Point2D(-1,-1);
 	// // Point2D point4 = Point2D(1,1);
 	// // LineSegment l2 = LineSegment(point3,point4);
@@ -70,7 +66,12 @@ int main(){
 	LineSegment seg4 = LineSegment(point7,point8);
 	LineSegment seg5 = LineSegment(point9,point10);
 	LineSegment seg6 = LineSegment(point11,point12);
-	set<LineSegment> segments {seg1,seg2,seg3,seg4,seg5,seg6};
+	vector<LineSegment> segments {seg1,seg2,seg3,seg4,seg5,seg6};
+	vector<LineSegment>::iterator itr;
+	for (itr = segments.begin(); itr != segments.end(); itr++) {
+	  itr->calculateSlopeConstant();
+	  // cout << itr->slope << endl;
+	}
 	set<Point2D> quick = BentleyOttmann::intersections(segments);
 	if (quick.empty())
 	  cout << "True" << endl;
